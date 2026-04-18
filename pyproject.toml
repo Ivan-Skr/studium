@@ -1,0 +1,29 @@
+[tool.poetry]
+name = "studium"
+version = "0.1.0"
+description = "Lms"
+authors = ["Ivan-Skr <skr20008@yandex.ru>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.14"
+django = ">=6.0.4,<7.0.0"
+python-dotenv = "^1.2.2"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = ">=4.5.1,<5.0.0"
+ruff = ">=0.15.11,<0.16.0"
+black = ">=26.3.1,<27.0.0"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP", "DJ", "T20"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
