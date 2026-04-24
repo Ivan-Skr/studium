@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+    <h1>Профиль: {{ user.username }}</h1>
+
+    {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 150px; border-radius: 50%;">
+    {% endif %}
+
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Роль:</strong>
+        {% if user.is_teacher %} Преподаватель {% else %} Студент {% endif %}
+    </p>
+
+    {% if user.bio %}
+        <p><strong>О себе:</strong> {{ user.bio }}</p>
+    {% endif %}
+
+    <hr>
+    <form action="{% url 'users:logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn" style="background-color: #dc3545;">Выйти</button>
+    </form>
+{% endblock %}

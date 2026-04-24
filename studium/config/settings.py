@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "users",
 ]
 
 MIDDLEWARE = [
@@ -42,7 +43,8 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        # Указываем Django искать шаблоны в корневой папке 'templates'
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -107,5 +109,16 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+# Чтобы после входа через встроенный LoginView Django перенаправлял в профиль
+LOGIN_REDIRECT_URL = "users:profile"
+LOGIN_URL = "users:login"
+
+# Регистрация своей модели User вместо стандартной
+AUTH_USER_MODEL = "users.User"
+
+# Аватарки в профиль
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
