@@ -3,13 +3,19 @@ from django.db import models
 
 
 class User(AbstractUser):
-    # Добавляем роли для LMS
+    # Роли
     is_student = models.BooleanField(default=True)
     is_teacher = models.BooleanField(default=False)
 
-    # Дополнительные поля
+    # Доп поля
     bio = models.TextField(max_length=500, blank=True)
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
 
+    email = models.EmailField(unique=True)
+
     def __str__(self):
         return self.username
+
+    @property
+    def role_display(self):
+        return "Преподаватель" if self.is_teacher else "Студент"
