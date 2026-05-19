@@ -1,0 +1,21 @@
+{% if block.correct_answer %}
+  <p class="text-sm text-gray-700 truncate">{{ block.question }}</p>
+{% elif block.max_choices %}
+  <p class="text-sm text-gray-700 truncate">{{ block.question }}</p>
+  <p class="text-xs text-gray-500 mt-1">{{ block.answers.count }} вариант(ов)</p>
+{% elif block.title %}
+  <p class="text-sm font-medium truncate">{{ block.title }}</p>
+  <p class="text-xs text-gray-500 truncate">{{ block.description }}</p>
+{% elif block.teachers_file %}
+  <p class="text-sm text-gray-600 truncate">📎 {{ block.teachers_file.name }}</p>
+{% elif block.text %}
+  <p class="text-sm text-gray-600 line-clamp-2">{{ block.text }}</p>
+{% elif block.image %}
+  <p class="text-sm text-gray-600">🖼 Изображение загружено</p>
+{% elif block.video %}
+  <p class="text-sm text-gray-600 truncate">🎬 {{ block.video.name }}</p>
+{% elif block.audio %}
+  <p class="text-sm text-gray-600 truncate">🔊 {{ block.audio.name }}</p>
+{% else %}
+  <p class="text-sm text-gray-400">Блок</p>
+{% endif %}

@@ -6,10 +6,12 @@ authors = ["Ivan-Skr <skr20008@yandex.ru>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.14"
+python = ">=3.14,<4.0"
 django = ">=6.0.4,<7.0.0"
 python-dotenv = "^1.2.2"
 pillow = "^12.2.0"
+django-polymorphic = "^4.11.2"
+django-admin-sortable2 = "^2.2.8"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = ">=4.5.1,<5.0.0"
@@ -24,6 +26,7 @@ select = ["E", "F", "W", "B", "I", "UP", "DJ", "T20"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+"**/migrations/*.py" = ["E501"]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

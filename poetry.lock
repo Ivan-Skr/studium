@@ -140,6 +140,52 @@ argon2 = ["argon2-cffi (>=23.1.0)"]
 bcrypt = ["bcrypt (>=4.1.1)"]
 
 [[package]]
+name = "django-admin-sortable2"
+version = "2.3.1"
+description = "Generic drag-and-drop sorting for the List, the Stacked- and the Tabular-Inlines Views in the Django Admin"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "django_admin_sortable2-2.3.1-py3-none-any.whl", hash = "sha256:5784f441f3532013438c3c3226fbccc39b9c733f867b26a5f477d6b05f734b93"},
+    {file = "django_admin_sortable2-2.3.1.tar.gz", hash = "sha256:e397d08606f9e0da73e52661b841021ecab21be6f74783408e625ccddfe975af"},
+]
+
+[package.dependencies]
+Django = ">=4.2"
+
+[[package]]
+name = "django-jazzmin"
+version = "3.0.4"
+description = "Drop-in theme for django admin, that utilises AdminLTE 3 & Bootstrap 5 to make yo' admin look jazzy"
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "django_jazzmin-3.0.4-py3-none-any.whl", hash = "sha256:70935a17604cc530e99be68d3d2b8c576095e1dac4af50464c827d66646f40fa"},
+    {file = "django_jazzmin-3.0.4.tar.gz", hash = "sha256:e8aef8b75edd8792408a69407c22ece924ab7a3d5c9d6f84d7a4eb57e06e7a44"},
+]
+
+[package.dependencies]
+django = ">=4.2"
+
+[[package]]
+name = "django-polymorphic"
+version = "4.11.2"
+description = "Seamless polymorphic inheritance for Django models."
+optional = false
+python-versions = "<4.0,>=3.10"
+groups = ["main"]
+files = [
+    {file = "django_polymorphic-4.11.2-py3-none-any.whl", hash = "sha256:4bf61d6faec4870aee91b997292be45db3ebbd644dea072607efcee8ca27301a"},
+    {file = "django_polymorphic-4.11.2.tar.gz", hash = "sha256:0b16060f50f0f196a8c5141a2f8f7d7d5289e7c78cf81aef2d63ff55762011ca"},
+]
+
+[package.dependencies]
+django = ">=4.2"
+typing-extensions = ">=4.12.0"
+
+[[package]]
 name = "filelock"
 version = "3.28.0"
 description = "A platform independent file lock."
@@ -578,6 +624,18 @@ dev = ["build"]
 doc = ["sphinx"]
 
 [[package]]
+name = "typing-extensions"
+version = "4.15.0"
+description = "Backported and Experimental Type Hints for Python 3.9+"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548"},
+    {file = "typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466"},
+]
+
+[[package]]
 name = "tzdata"
 version = "2026.1"
 description = "Provider of IANA time zone data"
@@ -610,5 +668,5 @@ python-discovery = ">=1.2.2"
 
 [metadata]
 lock-version = "2.1"
-python-versions = ">=3.14"
-content-hash = "8fda5fdd4f8e2b5b59ae9d2ffd3e5d6b5aa3ff30ab7d00bf9ef9d1a1490172ef"
+python-versions = ">=3.14,<4.0"
+content-hash = "5ec391a6f173cdb45dcfdffbd64d7d578528a41325cc91464b3bf6a51cf7478f"

@@ -33,6 +33,49 @@ from lessons.models import (
 )
 
 
+def _teacher_only(request):
+    return (
+        request.user.is_authenticated
+        and request.user.is_teacher
+        and not request.user.is_superuser
+    )
+
+
+class TeacherScopedAdminMixin:
+    """Ограничивает доступ преподавателя только своими объектами."""
+
+    teacher_lookup: str | None = None
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if _teacher_only(request) and self.teacher_lookup:
+            return queryset.filter(**{self.teacher_lookup: request.user})
+        return queryset
+
+    def has_change_permission(self, request, obj=None):
+        if obj and _teacher_only(request) and self.teacher_lookup:
+            owner_id = self._get_owner_id(obj)
+            if owner_id != request.user.id:
+                return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and _teacher_only(request) and self.teacher_lookup:
+            owner_id = self._get_owner_id(obj)
+            if owner_id != request.user.id:
+                return False
+        return super().has_delete_permission(request, obj)
+
+    def _get_owner_id(self, obj):
+        if self.teacher_lookup == "author":
+            return obj.author_id
+        if self.teacher_lookup == "course__author":
+            return obj.course.author_id
+        if self.teacher_lookup == "lesson__course__author":
+            return obj.lesson.course.author_id
+        return None
+
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("name", "slug")
@@ -49,7 +92,13 @@ class LessonInline(SortableInlineAdminMixin, admin.TabularInline):
 
 
 @admin.register(Course)
-class CourseAdmin(SortableAdminBase, PolymorphicInlineSupportMixin, admin.ModelAdmin):
+class CourseAdmin(
+    TeacherScopedAdminMixin,
+    SortableAdminBase,
+    PolymorphicInlineSupportMixin,
+    admin.ModelAdmin,
+):
+    teacher_lookup = "author"
     list_display = (
         "name",
         "author",
@@ -66,6 +115,17 @@ class CourseAdmin(SortableAdminBase, PolymorphicInlineSupportMixin, admin.ModelA
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         return queryset.annotate(_lesson_count=Count("lessons"))
+
+    def save_model(self, request, obj, form, change):
+        if not change and not obj.author_id:
+            obj.author = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if _teacher_only(request) and "author" not in readonly:
+            readonly.append("author")
+        return readonly
 
     @admin.display(description="Уроков", ordering="_lesson_count")
     def lesson_count(self, obj):
@@ -119,7 +179,8 @@ BlockInline.formset = BlockInlineFormSet
 
 
 @admin.register(Lesson)
-class LessonAdmin(SortableAdminBase, admin.ModelAdmin):
+class LessonAdmin(TeacherScopedAdminMixin, SortableAdminBase, admin.ModelAdmin):
+    teacher_lookup = "course__author"
     list_display = ("name", "course", "order", "blocks_count")
     list_filter = ("course",)
     list_select_related = ("course",)
@@ -181,7 +242,8 @@ class LessonAdmin(SortableAdminBase, admin.ModelAdmin):
         )
 
 
-class BaseBlockChildAdmin(PolymorphicChildModelAdmin):
+class BaseBlockChildAdmin(TeacherScopedAdminMixin, PolymorphicChildModelAdmin):
+    teacher_lookup = "lesson__course__author"
     base_model = Block
     change_list_template = "admin/change_list.html"
     list_display = ("__str__", "lesson", "course_name", "order")
@@ -297,7 +359,8 @@ class FileQuestionAdmin(BaseBlockChildAdmin):
 
 
 @admin.register(Block)
-class BlockParentAdmin(PolymorphicParentModelAdmin):
+class BlockParentAdmin(TeacherScopedAdminMixin, PolymorphicParentModelAdmin):
+    teacher_lookup = "lesson__course__author"
     base_model = Block
     child_models = (
         TextBlock,

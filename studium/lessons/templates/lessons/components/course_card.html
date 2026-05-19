@@ -1,0 +1,18 @@
+<a href="{% url 'lessons:course_detail' course.pk %}"
+   class="block bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+  {% if course.image %}
+    <div class="aspect-video bg-gray-100 overflow-hidden">
+      <img src="{{ course.image.url }}" alt="{{ course.name }}" class="w-full h-full object-cover">
+    </div>
+  {% endif %}
+  <div class="p-5">
+    <h3 class="text-lg font-semibold mb-2">{{ course.name }}</h3>
+    <p class="text-sm text-gray-600 line-clamp-3 mb-3">{{ course.description }}</p>
+    {% if course.author %}
+      <p class="text-xs text-gray-500">Автор: {{ course.author.get_full_name|default:course.author.username }}</p>
+    {% endif %}
+    {% if course.category %}
+      <span class="inline-block mt-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded">{{ course.category.name }}</span>
+    {% endif %}
+  </div>
+</a>

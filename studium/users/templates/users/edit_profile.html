@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактировать профиль | LMS Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-50 text-slate-900">
+
+  <div class="max-w-3xl mx-auto px-6 py-8">
+    <a href="{% url 'users:profile' %}" class="inline-flex items-center gap-2 text-gray-500 hover:text-black transition-colors mb-6 group">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i>
+      Назад к профилю
+    </a>
+
+    <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
+      <h2 class="text-2xl font-semibold mb-6">Редактировать профиль</h2>
+
+      {% if messages %}
+        {% for message in messages %}
+          <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p class="text-sm text-green-800">{{ message }}</p>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if form.errors %}
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          {% for field in form %}
+            {% for error in field.errors %}
+              <p class="text-sm text-red-600">{{ field.label }}: {{ error }}</p>
+            {% endfor %}
+          {% endfor %}
+          {% for error in form.non_field_errors %}
+            <p class="text-sm text-red-600">{{ error }}</p>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <div>
+          <label for="id_username" class="block mb-2 font-medium">Имя пользователя</label>
+          <input
+            id="id_username"
+            name="username"
+            type="text"
+            value="{{ form.username.value|default_if_none:'' }}"
+            placeholder="Ваше имя"
+            class="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            required
+          />
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="id_last_name" class="block mb-2 font-medium">Фамилия</label>
+            <input
+              id="id_last_name"
+              name="last_name"
+              type="text"
+              value="{{ form.last_name.value|default_if_none:'' }}"
+              placeholder="Иванов"
+              class="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              required
+            />
+          </div>
+          <div>
+            <label for="id_first_name" class="block mb-2 font-medium">Имя</label>
+            <input
+              id="id_first_name"
+              name="first_name"
+              type="text"
+              value="{{ form.first_name.value|default_if_none:'' }}"
+              placeholder="Иван"
+              class="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label for="id_email" class="block mb-2 font-medium">Email</label>
+          <input
+            id="id_email"
+            name="email"
+            type="email"
+            value="{{ form.email.value|default_if_none:'' }}"
+            placeholder="example@mail.com"
+            class="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            required
+          />
+        </div>
+
+        <div>
+          <label for="id_avatar" class="block mb-2 font-medium">Аватар</label>
+          {% if user.avatar %}
+            <div class="mb-3 flex items-center gap-3">
+              <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-200 border border-gray-200">
+                <img src="{{ user.avatar.url }}" alt="Текущий аватар" class="w-full h-full object-cover" />
+              </div>
+              <span class="text-sm text-gray-500">Текущий аватар</span>
+            </div>
+          {% endif %}
+          <input
+            id="id_avatar"
+            name="avatar"
+            type="file"
+            accept="image/*"
+            class="w-full px-4 py-3 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          />
+          <p class="text-xs text-gray-500 mt-1">Загрузите изображение для использования в качестве аватара.</p>
+        </div>
+
+        <div id="avatar-preview-container" class="hidden">
+          <p class="text-sm text-gray-500 mb-2">Предпросмотр нового аватара</p>
+          <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 border border-gray-200">
+            <img
+              id="avatar-preview-img"
+              src=""
+              alt="Avatar preview"
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button
+            type="submit"
+            class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <i data-lucide="save" class="w-5 h-5"></i>
+            <span>Сохранить изменения</span>
+          </button>
+
+          <a
+            href="{% url 'users:profile' %}"
+            class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors text-center"
+          >
+            Отмена
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Предпросмотр нового аватара из выбранного файла
+    const avatarInput = document.getElementById('id_avatar');
+    const previewContainer = document.getElementById('avatar-preview-container');
+    const previewImg = document.getElementById('avatar-preview-img');
+
+    avatarInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          previewImg.src = ev.target.result;
+          previewContainer.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        previewContainer.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

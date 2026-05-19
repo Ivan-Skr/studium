@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование: {{ course.name }} — Studium{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-6">
+
+  <div class="mb-6">
+    <a href="{% url 'lessons:teacher_course_list' %}" class="text-sm text-gray-500 hover:text-gray-700">← Мои курсы</a>
+    <h1 class="text-3xl font-bold mt-2">{{ course.name }}</h1>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+    <section class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+      <h2 class="text-lg font-semibold mb-4">Настройки курса</h2>
+
+      <form method="post" enctype="multipart/form-data" class="space-y-5">
+        {% csrf_token %}
+        {% include "lessons/teaching/_course_form_fields.html" %}
+
+        {% if course.image %}
+        <p class="text-xs text-gray-500">Текущая обложка сохранена. Загрузите новый файл, чтобы заменить.</p>
+        {% endif %}
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+            Сохранить
+          </button>
+          {% if course.is_published %}
+          <a href="{% url 'lessons:course_detail' course.pk %}" class="px-5 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50">
+            Просмотр
+          </a>
+          {% endif %}
+        </div>
+      </form>
+
+      <form method="post" action="{% url 'lessons:teacher_course_delete' course.pk %}"
+            class="mt-6 pt-6 border-t border-gray-200"
+            onsubmit="return confirm('Удалить курс «{{ course.name|escapejs }}»? Это действие нельзя отменить.');">
+        {% csrf_token %}
+        <button type="submit" class="text-sm text-red-600 hover:text-red-800">Удалить курс</button>
+      </form>
+    </section>
+
+    <section class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold">Уроки</h2>
+        <a href="{% url 'lessons:teacher_lesson_create' course.pk %}"
+           class="text-sm px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          + Добавить
+        </a>
+      </div>
+
+      {% if lessons %}
+      <ul class="space-y-2">
+        {% for lesson in lessons %}
+        <li class="flex items-center justify-between gap-3 p-3 border border-gray-100 rounded-lg">
+          <span class="text-sm text-gray-400 font-mono w-6">{{ lesson.order }}</span>
+          <span class="flex-1 font-medium">{{ lesson.name }}</span>
+          <div class="flex gap-2 shrink-0 items-center">
+            <form method="post" action="{% url 'lessons:teacher_lesson_move' course.pk lesson.pk 'up' %}">
+              {% csrf_token %}
+              <button type="submit" class="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50" title="Выше">↑</button>
+            </form>
+            <form method="post" action="{% url 'lessons:teacher_lesson_move' course.pk lesson.pk 'down' %}">
+              {% csrf_token %}
+              <button type="submit" class="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-50" title="Ниже">↓</button>
+            </form>
+            <a href="{% url 'lessons:teacher_lesson_editor' course.pk lesson.pk %}"
+               class="text-sm text-blue-600 hover:text-blue-800 font-medium">Редактировать</a>
+            <form method="post" action="{% url 'lessons:teacher_lesson_delete' course.pk lesson.pk %}"
+                  onsubmit="return confirm('Удалить урок «{{ lesson.name|escapejs }}»?');">
+              {% csrf_token %}
+              <button type="submit" class="text-sm text-red-600 hover:text-red-800">Удалить</button>
+            </form>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-gray-500 text-sm text-center py-6">Уроков пока нет. Добавьте первый урок.</p>
+      {% endif %}
+
+    </section>
+
+  </div>
+
+</div>
+{% endblock %}
