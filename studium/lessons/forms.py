@@ -18,10 +18,14 @@ from .models import (
 
 INPUT_CLASS = (
     "w-full px-4 py-2.5 rounded-lg border border-gray-300 "
+    "bg-white text-gray-900 "  # Стили для светлой темы
+    "dark:border-slate-600 dark:bg-slate-800 dark:text-gray-100 "
     "focus:outline-none focus:ring-2 focus:ring-blue-500"
 )
 CHECKBOX_CLASS = "rounded border-gray-300 text-blue-600"
-DATETIME_INPUT_FORMATS = ["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
+DATETIME_INPUT_FORMATS = ["%Y-%m-%dT%H:%M",
+                          "%Y-%m-%d %H:%M:%S",
+                          "%Y-%m-%d %H:%M"]
 
 
 def _datetime_widget():
@@ -54,7 +58,7 @@ class CourseForm(forms.ModelForm):
                 attrs={"class": INPUT_CLASS, "placeholder": "Название курса"}
             ),
             "description": forms.Textarea(
-                attrs={"class": INPUT_CLASS, "rows": 5, "placeholder": "Описание курса"}
+                attrs={"class":INPUT_CLASS, "rows":5, "placeholder":"Описание курса"}
             ),
             "image": forms.FileInput(attrs={"class": INPUT_CLASS}),
             "category": forms.Select(attrs={"class": INPUT_CLASS}),
@@ -91,7 +95,7 @@ class TextBlockForm(forms.ModelForm):
         labels = {"text": "Текст"}
         widgets = {
             "text": forms.Textarea(
-                attrs={"class": INPUT_CLASS, "rows": 8, "placeholder": "Текст урока"}
+                attrs={"class":INPUT_CLASS, "rows":8, "placeholder":"Текст урока"}
             ),
         }
 
@@ -137,7 +141,7 @@ class TeacherFileBlockForm(forms.ModelForm):
         model = TeacherFileBlock
         fields = ("teachers_file",)
         labels = {"teachers_file": "Файл для студентов"}
-        widgets = {"teachers_file": forms.FileInput(attrs={"class": INPUT_CLASS})}
+        widgets = {"teachers_file": forms.FileInput(attrs={"class":INPUT_CLASS})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -6,8 +6,8 @@
 <div class="max-w-7xl mx-auto px-6">
 
   <div class="mb-8">
-    <h1 class="text-3xl font-bold mb-2">Каталог курсов</h1>
-    <p class="text-gray-600">Выберите курс для начала обучения</p>
+    <h1 class="text-3xl font-bold mb-2 dark:text-white">Каталог курсов</h1>
+    <p class="text-gray-600 dark:text-gray-400">Выберите курс для начала обучения</p>
   </div>
 
   <div class="mb-8">
@@ -17,7 +17,7 @@
         name="q"
         placeholder="Поиск курсов..."
         value="{{ request.GET.q }}"
-        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
       />
     </form>
   </div>
@@ -26,9 +26,11 @@
     {% for course in courses %}
       {% include "lessons/components/course_card.html" %}
     {% empty %}
-      <p class="col-span-full text-center py-12 text-gray-500">Курсы не найдены</p>
+      <p class="col-span-full text-center py-12 text-gray-500 dark:text-gray-400">Курсы не найдены</p>
     {% endfor %}
   </div>
 
 </div>
+
+
 {% endblock %}

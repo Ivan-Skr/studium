@@ -7,69 +7,77 @@
 
   <div class="mb-6">
     <a href="{% url 'lessons:teacher_lesson_editor' course.pk lesson.pk %}"
-       class="text-sm text-gray-500 hover:text-gray-700">
+       class="text-sm text-gray-500 hover:text-gray-400 transition-colors">
       ← {{ lesson.name }}
     </a>
-    <h1 class="text-2xl font-bold mt-2">
+    <h1 class="text-2xl font-bold mt-2 dark:text-white">
       {% if is_edit %}Редактирование{% else %}Добавление{% endif %}: {{ block_label }}
     </h1>
   </div>
 
   <form method="post" enctype="multipart/form-data"
-        class="bg-white border border-gray-200 rounded-lg p-6 space-y-5 shadow-sm">
+        class="bg-white border border-gray-200 dark:bg-slate-800 dark:border-slate-700 rounded-lg p-6 space-y-5 shadow-sm transition-colors duration-200">
     {% csrf_token %}
 
     {% for field in form %}
     <div>
-      <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+      <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         {{ field.label }}
       </label>
-      {{ field }}
+
+      {# Переопределение базовых стилей для встроенных виджетов Django form #}
+      <div class="[&_input[type='text']]:w-full [&_input[type='text']]:px-4 [&_input[type='text']]:py-2.5 [&_input[type='text']]:rounded-lg [&_input[type='text']]:border [&_input[type='text']]:border-gray-300 [&_input[type='text']]:bg-white [&_input[type='text']]:text-gray-900 [&_input[type='text']]:focus:ring-2 [&_input[type='text']]:focus:ring-blue-500 [&_input[type='text']]:dark:border-slate-600 [&_input[type='text']]:dark:bg-slate-700 [&_input[type='text']]:dark:text-white [&_input[type='text']]:dark:focus:ring-blue-500
+                  [&_textarea]:w-full [&_textarea]:px-4 [&_textarea]:py-2.5 [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-gray-300 [&_textarea]:bg-white [&_textarea]:text-gray-900 [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-blue-500 [&_textarea]:dark:border-slate-600 [&_textarea]:dark:bg-slate-700 [&_textarea]:dark:text-white [&_textarea]:dark:focus:ring-blue-500
+                  [&_input[type='file']]:block [&_input[type='file']]:w-full [&_input[type='file']]:text-sm [&_input[type='file']]:text-gray-500 [&_input[type='file']]:dark:text-gray-400 [&_input[type='file']]:file:mr-4 [&_input[type='file']]:file:py-2 [&_input[type='file']]:file:px-4 [&_input[type='file']]:file:rounded-md [&_input[type='file']]:file:border-0 [&_input[type='file']]:file:text-sm [&_input[type='file']]:file:font-semibold [&_input[type='file']]:file:bg-blue-50 [&_input[type='file']]:file:text-blue-700 [&_input[type='file']]:hover:file:bg-blue-100 [&_input[type='file']]:dark:file:bg-slate-700 [&_input[type='file']]:dark:file:text-gray-200
+                  [&_input[type='number']]:w-full [&_input[type='number']]:px-4 [&_input[type='number']]:py-2.5 [&_input[type='number']]:rounded-lg [&_input[type='number']]:border [&_input[type='number']]:border-gray-300 [&_input[type='number']]:bg-white [&_input[type='number']]:text-gray-900 [&_input[type='number']]:dark:border-slate-600 [&_input[type='number']]:dark:bg-slate-700 [&_input[type='number']]:dark:text-white">
+        {{ field }}
+      </div>
+
       {% if field.help_text %}
-      <p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ field.help_text }}</p>
       {% endif %}
       {% for error in field.errors %}
-      <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+      <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ error }}</p>
       {% endfor %}
       {% if is_edit %}
         {% if field.name == "image" or field.name == "video" or field.name == "audio" or field.name == "teachers_file" %}
-      <p class="mt-1 text-xs text-gray-500">Оставьте пустым, чтобы не менять файл.</p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Оставьте пустым, чтобы не менять файл.</p>
         {% endif %}
       {% endif %}
     </div>
     {% endfor %}
 
     {% if formset %}
-    <div class="pt-4 border-t border-gray-200" id="choice-answers-section">
+    <div class="pt-4 border-t border-gray-200 dark:border-slate-700" id="choice-answers-section">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-sm font-semibold">Варианты ответа</h3>
+        <h3 class="text-sm font-semibold dark:text-white">Варианты ответа</h3>
         <button type="button" id="add-answer-btn"
-                class="text-sm px-3 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50">
+                class="text-sm px-3 py-1.5 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 dark:text-gray-200 transition-colors">
           + Добавить вариант
         </button>
       </div>
       {{ formset.management_form }}
       {% if formset.non_form_errors %}
-      <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+      <div class="mb-3 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400">
         {% for error in formset.non_form_errors %}{{ error }}{% endfor %}
       </div>
       {% endif %}
       <div id="answer-forms-list" class="space-y-3">
         {% for answer_form in formset %}
-        <div class="answer-form-row flex flex-wrap items-start gap-3 p-3 bg-gray-50 rounded-lg">
+        <div class="answer-form-row flex flex-wrap items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
           {% for hidden in answer_form.hidden_fields %}{{ hidden }}{% endfor %}
-          <div class="flex-1 min-w-[200px]">
+          <div class="flex-1 min-w-[200px] [&_input]:w-full [&_input]:px-3 [&_input]:py-1.5 [&_input]:rounded-md [&_input]:border [&_input]:border-gray-300 [&_input]:bg-white [&_input]:text-gray-900 [&_input]:dark:border-slate-600 [&_input]:dark:bg-slate-700 [&_input]:dark:text-white">
             {{ answer_form.text }}
             {% for error in answer_form.text.errors %}
-            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
+            <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ error }}</p>
             {% endfor %}
           </div>
-          <label class="flex items-center gap-2 text-sm shrink-0 pt-2">
+          <label class="flex items-center gap-2 text-sm shrink-0 pt-2 dark:text-gray-200 cursor-pointer">
             {{ answer_form.is_correct }}
             <span>Верный</span>
           </label>
           {% if answer_form.DELETE %}
-          <label class="flex items-center gap-1 text-sm text-red-600 shrink-0 pt-2">
+          <label class="flex items-center gap-1 text-sm text-red-600 dark:text-red-400 shrink-0 pt-2 cursor-pointer">
             {{ answer_form.DELETE }}
             <span>Удалить</span>
           </label>
@@ -80,12 +88,12 @@
     </div>
 
     <template id="empty-answer-form-template">
-      <div class="answer-form-row flex flex-wrap items-start gap-3 p-3 bg-gray-50 rounded-lg">
+      <div class="answer-form-row flex flex-wrap items-start gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-lg">
         {% for hidden in formset.empty_form.hidden_fields %}{{ hidden }}{% endfor %}
-        <div class="flex-1 min-w-[200px]">
+        <div class="flex-1 min-w-[200px] [&_input]:w-full [&_input]:px-3 [&_input]:py-1.5 [&_input]:rounded-md [&_input]:border [&_input]:border-gray-300 [&_input]:bg-white [&_input]:text-gray-900 [&_input]:dark:border-slate-600 [&_input]:dark:bg-slate-700 [&_input]:dark:text-white">
           {{ formset.empty_form.text }}
         </div>
-        <label class="flex items-center gap-2 text-sm shrink-0 pt-2">
+        <label class="flex items-center gap-2 text-sm shrink-0 pt-2 dark:text-gray-200 cursor-pointer">
           {{ formset.empty_form.is_correct }}
           <span>Верный</span>
         </label>
@@ -115,11 +123,11 @@
     {% endif %}
 
     <div class="flex gap-3 pt-2">
-      <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+      <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 font-medium transition-colors">
         {% if is_edit %}Сохранить{% else %}Добавить блок{% endif %}
       </button>
       <a href="{% url 'lessons:teacher_lesson_editor' course.pk lesson.pk %}"
-         class="px-5 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50">
+         class="px-5 py-2.5 border border-gray-200 dark:border-slate-600 text-gray-900 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
         Отмена
       </a>
     </div>
