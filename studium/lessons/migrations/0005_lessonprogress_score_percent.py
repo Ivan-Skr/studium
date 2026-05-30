@@ -4,7 +4,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("lessons", "0004_certificatetemplate_coursecompletion_lessonprogress_and_more"),
+        (
+            "lessons",
+            "0004_certificatetemplate_coursecompletion_lessonprogress_and_more",
+        ),
     ]
 
     operations = [

@@ -1,17 +1,17 @@
+from datetime import date
+
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, F, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.http import require_POST
-import calendar
-from datetime import date
 
 from .forms import EnrollmentCodeForm
 from .models import (
@@ -26,10 +26,10 @@ from .models import (
     FileQuestion,
     Lesson,
     LessonProgress,
+    LessonStudyTime,
     StudentCertificate,
     TextAnswerSubmission,
     TextQuestion,
-    LessonStudyTime,
 )
 
 MAX_LEARNING_SECONDS_PER_PING = 120
@@ -79,6 +79,7 @@ def _student_deadline_events(user):
 
     return events
 
+
 def _month_from_request(request):
     today = timezone.localdate()
 
@@ -93,6 +94,7 @@ def _month_from_request(request):
 
     return year, month
 
+
 def _shift_month(year, month, delta):
     month += delta
 
@@ -105,6 +107,7 @@ def _shift_month(year, month, delta):
         year += 1
 
     return year, month
+
 
 def _build_calendar_grid(events, year, month):
     russian_months = {
@@ -168,6 +171,7 @@ def _build_calendar_grid(events, year, month):
         "next_year": next_year,
         "next_month": next_month,
     }
+
 
 def _calendar_feed_url(request, user):
     return request.build_absolute_uri(
@@ -246,7 +250,9 @@ def student_calendar_ics(request, token):
         )
     lines.append("END:VCALENDAR")
 
-    response = HttpResponse("\r\n".join(lines) + "\r\n", content_type="text/calendar; charset=utf-8")
+    response = HttpResponse(
+        "\r\n".join(lines) + "\r\n", content_type="text/calendar; charset=utf-8"
+    )
     response["Content-Disposition"] = 'inline; filename="studium-deadlines.ics"'
     return response
 
@@ -533,10 +539,7 @@ def _lesson_score_percent(user, blocks):
     if not user.is_authenticated:
         return None
 
-    scores = [
-        _block_score_percent(user, block)
-        for block in _question_blocks(blocks)
-    ]
+    scores = [_block_score_percent(user, block) for block in _question_blocks(blocks)]
     scores = [score for score in scores if score is not None]
     if not scores:
         return 100
@@ -839,11 +842,15 @@ def lesson_detail(request, course_id, lesson_id):
         for block in blocks
     ]
     has_choice_questions = any(isinstance(block, ChoiceQuestion) for block in blocks)
-    can_check_choices = request.user.is_authenticated and any(
-        isinstance(block, ChoiceQuestion)
-        and block_states.get(block.pk, _default_block_state())["can_submit"]
-        for block in blocks
-    ) and not _choice_questions_all_correct(request.user, blocks)
+    can_check_choices = (
+        request.user.is_authenticated
+        and any(
+            isinstance(block, ChoiceQuestion)
+            and block_states.get(block.pk, _default_block_state())["can_submit"]
+            for block in blocks
+        )
+        and not _choice_questions_all_correct(request.user, blocks)
+    )
     attempt_summary = _lesson_attempt_summary(block_states, blocks)
 
     return render(
@@ -891,9 +898,6 @@ def track_learning_time(request, course_id, lesson_id):
             student=request.user,
         ).update(seconds=F("seconds") + seconds)
     return HttpResponse(status=204)
-
-
-
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -1081,5 +1085,3 @@ def submit_file_answer(request, course_id, lesson_id, block_id):
 
     messages.success(request, "Файл успешно отправлен.")
     return _redirect_to_lesson(course_id, lesson_id)
-
-

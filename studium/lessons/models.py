@@ -196,7 +196,6 @@ class LessonStudyTime(models.Model):
         return f"{self.student} → {self.lesson}: {self.seconds} сек."
 
 
-
 class CourseCompletion(models.Model):
     course = models.ForeignKey(
         Course,
@@ -617,7 +616,9 @@ class TextAnswerSubmission(models.Model):
 
         if self.question_id and self.question.lesson.deadline:
             if timezone.now() > self.question.lesson.deadline:
-                raise ValidationError("Дедлайн урока уже прошёл. Нельзя отправить ответ.")
+                raise ValidationError(
+                    "Дедлайн урока уже прошёл. Нельзя отправить ответ."
+                )
 
         if self.attempt is None and self.student_id and self.question_id:
             last = (
@@ -685,7 +686,9 @@ class ChoiceAnswerSubmission(models.Model):
 
         if self.question_id and self.question.lesson.deadline:
             if timezone.now() > self.question.lesson.deadline:
-                raise ValidationError("Дедлайн урока уже прошёл. Нельзя отправить ответ.")
+                raise ValidationError(
+                    "Дедлайн урока уже прошёл. Нельзя отправить ответ."
+                )
 
         if self.attempt is None and self.student_id and self.question_id:
             last = (
@@ -805,7 +808,9 @@ class FileAnswerSubmission(models.Model):
 
         if self.question_id and self.question.lesson.deadline:
             if timezone.now() > self.question.lesson.deadline:
-                raise ValidationError("Дедлайн урока уже прошёл. Нельзя отправить файл.")
+                raise ValidationError(
+                    "Дедлайн урока уже прошёл. Нельзя отправить файл."
+                )
 
         if self.student_id and self.question_id:
             existing_attempts = (
@@ -821,6 +826,7 @@ class FileAnswerSubmission(models.Model):
                     "Превышено максимальное число попыток "
                     f"({self.question.max_attempts})."
                 )
+
 
 class StudentGroup(models.Model):
     course = models.ForeignKey(

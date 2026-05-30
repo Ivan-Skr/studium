@@ -2,6 +2,7 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
+
 class Migration(migrations.Migration):
     dependencies = [
         ("lessons", "0005_lessonprogress_score_percent"),
@@ -21,7 +22,10 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("name", models.CharField(max_length=100, verbose_name="Название группы")),
+                (
+                    "name",
+                    models.CharField(max_length=100, verbose_name="Название группы"),
+                ),
                 (
                     "created_at",
                     models.DateTimeField(auto_now_add=True, verbose_name="Создана"),
@@ -66,7 +70,10 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("seconds", models.PositiveIntegerField(default=0, verbose_name="Секунды")),
+                (
+                    "seconds",
+                    models.PositiveIntegerField(default=0, verbose_name="Секунды"),
+                ),
                 (
                     "updated_at",
                     models.DateTimeField(auto_now=True, verbose_name="Обновлено"),

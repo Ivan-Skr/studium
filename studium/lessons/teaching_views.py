@@ -1,11 +1,10 @@
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
-from django.db.models import Avg, Count, Q, Sum
-from django.utils import timezone
 from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from .block_registry import BLOCK_TYPES, get_block_type_label, get_block_type_slug
 from .decorators import teacher_required
@@ -18,16 +17,15 @@ from .forms import (
 from .models import (
     Block,
     CertificateTemplate,
+    ChoiceQuestion,
     Course,
     CourseEnrollment,
     Lesson,
-    StudentCertificate,
-    ChoiceQuestion,
     LessonProgress,
     LessonStudyTime,
+    StudentCertificate,
     StudentGroup,
     TextQuestion,
-    FileQuestion,
 )
 
 
@@ -626,6 +624,7 @@ def _format_hours(seconds):
         return f"{round(seconds / 60)} мин"
     return f"{hours:.1f} ч"
 
+
 def _approved_enrollments(course):
     return (
         course.enrollments.filter(status=CourseEnrollment.Status.APPROVED)
@@ -633,9 +632,11 @@ def _approved_enrollments(course):
         .order_by("student__last_name", "student__first_name", "student__username")
     )
 
+
 def _student_display_name(student):
     full_name = f"{student.first_name} {student.last_name}".strip()
     return full_name or student.username or student.email
+
 
 def _course_student_rows(course, group_id=None):
     enrollments = _approved_enrollments(course)
@@ -671,9 +672,7 @@ def _course_student_rows(course, group_id=None):
         completed_count = sum(
             1 for lesson in lessons if (student.pk, lesson.pk) in progress_map
         )
-        progress_percent = (
-            round(completed_count * 100 / len(lessons)) if lessons else 0
-        )
+        progress_percent = round(completed_count * 100 / len(lessons)) if lessons else 0
         last_progress = (
             LessonProgress.objects.filter(
                 student=student,
@@ -697,6 +696,7 @@ def _course_student_rows(course, group_id=None):
             }
         )
     return rows
+
 
 def _course_progress_table(course, group_id=None):
     enrollments = _approved_enrollments(course)
@@ -760,9 +760,7 @@ def _course_progress_table(course, group_id=None):
                 }
             )
 
-        progress_percent = (
-            round(completed_count * 100 / len(lessons)) if lessons else 0
-        )
+        progress_percent = round(completed_count * 100 / len(lessons)) if lessons else 0
 
         rows.append(
             {
@@ -781,6 +779,7 @@ def _course_progress_table(course, group_id=None):
         "lessons": lessons,
         "rows": rows,
     }
+
 
 def _teacher_courses_dashboard(user):
     courses = (
@@ -836,9 +835,7 @@ def _teacher_courses_dashboard(user):
         "total_courses": courses.count(),
         "total_students": total_students,
         "average_progress": (
-            round(sum(progress_values) / len(progress_values))
-            if progress_values
-            else 0
+            round(sum(progress_values) / len(progress_values)) if progress_values else 0
         ),
     }
 
@@ -868,6 +865,7 @@ def teacher_group_create(request, course_id):
     messages.success(request, "Группа создана.")
     return redirect(f"{reverse('lessons:teacher_course_list')}?groups={course.pk}")
 
+
 @teacher_required
 @require_POST
 def teacher_group_update(request, course_id, group_id):
@@ -885,13 +883,15 @@ def teacher_group_update(request, course_id, group_id):
         )
         if duplicate.exists():
             messages.error(request, "Группа с таким названием уже существует.")
-            return redirect(f"{reverse('lessons:teacher_course_list')}?groups={course.pk}")
+            return redirect(
+                f"{reverse('lessons:teacher_course_list')}?groups={course.pk}"
+            )
         group.name = name
         group.save(update_fields=["name"])
 
-    course.enrollments.filter(group=group).exclude(
-        student_id__in=selected_ids
-    ).update(group=None)
+    course.enrollments.filter(group=group).exclude(student_id__in=selected_ids).update(
+        group=None
+    )
 
     course.enrollments.filter(
         status=CourseEnrollment.Status.APPROVED,
@@ -900,6 +900,7 @@ def teacher_group_update(request, course_id, group_id):
 
     messages.success(request, "Группа обновлена.")
     return redirect(f"{reverse('lessons:teacher_course_list')}?groups={course.pk}")
+
 
 @teacher_required
 @require_POST

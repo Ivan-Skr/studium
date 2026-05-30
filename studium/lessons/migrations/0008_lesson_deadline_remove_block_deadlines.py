@@ -1,5 +1,6 @@
 from django.db import migrations, models
 
+
 def move_block_deadlines_to_lessons(apps, schema_editor):
     Lesson = apps.get_model("lessons", "Lesson")
     TextQuestion = apps.get_model("lessons", "TextQuestion")
@@ -22,9 +23,13 @@ def move_block_deadlines_to_lessons(apps, schema_editor):
             deadline=deadline
         )
 
+
 class Migration(migrations.Migration):
     dependencies = [
-        ("lessons", "0007_rename_lessons_les_student_lesson_time_idx_lessons_les_student_833c5d_idx"),
+        (
+            "lessons",
+            "0007_rename_lessons_les_student_lesson_time_idx_lessons_les_student_833c5d_idx",
+        ),
     ]
 
     operations = [
