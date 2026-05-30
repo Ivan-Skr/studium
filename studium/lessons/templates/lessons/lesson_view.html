@@ -1,23 +1,18 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
-{% block title %}{{ lesson.name }} — {{ course.name }}{% endblock %}
+{% block title %}{{ lesson.name }} - {{ course.name }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen">
-
   <div class="border-b border-gray-200 bg-white dark:bg-slate-800 dark:border-slate-700 transition-colors duration-200">
     <div class="max-w-4xl mx-auto px-6 py-4">
-      <a href="{% url 'lessons:course_detail' course.pk %}"
-         class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm mb-2 transition-colors">
-        ← Назад к курсу
-      </a>
+      <a href="{% url 'lessons:course_detail' course.pk %}" class="inline-flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-sm mb-2 transition-colors">Назад к курсу</a>
       <h1 class="text-2xl font-bold dark:text-white">{{ lesson.name }}</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ course.name }}</p>
     </div>
   </div>
 
   <div class="max-w-4xl mx-auto px-6 py-8">
-
     <div class="space-y-8 mb-8">
       {% for item in blocks_with_state %}
         {% with block=item.block state=item.state %}
@@ -28,40 +23,23 @@
             <p class="mb-4 text-gray-700 dark:text-gray-300">{{ block.question }}</p>
 
             {% if state.submitted %}
-              <div class="p-4 rounded-lg mb-4 border transition-colors
-                {% if state.is_correct %}
-                  bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400
-                {% else %}
-                  bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400
-                {% endif %}">
-                {% if state.is_correct %}✓ Верно!{% else %}✗ Неверно.{% endif %}
-                Ваш ответ: <strong>{{ state.last_answer }}</strong>
+              <div class="p-4 rounded-lg mb-4 border transition-colors {% if state.is_correct %}bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400{% else %}bg-red-50 border-red-200 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400{% endif %}">
+                {% if state.is_correct %}Верно{% else %}Неверно{% endif %}. Ваш ответ: <strong>{{ state.last_answer }}</strong>
               </div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                Попыток: {{ state.attempts_used }} / {{ state.max_attempts }}
-              </p>
             {% endif %}
 
             {% if user.is_authenticated %}
               {% if state.can_submit %}
                 <form method="post" action="{% url 'lessons:submit_text_answer' course.pk lesson.pk block.pk %}">
                   {% csrf_token %}
-                  <textarea name="answer" rows="4" maxlength="100"
-                            class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:focus:ring-blue-500"
-                            placeholder="Введите ответ...">{{ state.last_answer }}</textarea>
-                  <button type="submit"
-                          class="mt-4 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
-                    Отправить ответ
-                  </button>
+                  <textarea name="answer" rows="4" maxlength="100" class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:focus:ring-blue-500" placeholder="Введите ответ...">{{ state.last_answer }}</textarea>
+                  <button type="submit" class="mt-4 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">Отправить ответ</button>
                 </form>
-              {% elif not state.submitted %}
-                <p class="text-sm text-amber-700 dark:text-amber-400">Лимит попыток исчерпан или истёк срок сдачи.</p>
+              {% elif not state.submitted and not lesson_state.is_completed %}
+                <p class="text-sm text-amber-700 dark:text-amber-400">Лимит попыток исчерпан или истек срок сдачи.</p>
               {% endif %}
             {% else %}
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                <a href="{% url 'users:login' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">Войдите</a>,
-                чтобы отправить ответ.
-              </p>
+              <p class="text-sm text-gray-500 dark:text-gray-400"><a href="{% url 'users:login' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">Войдите</a>, чтобы отправить ответ.</p>
             {% endif %}
           </div>
 
@@ -71,59 +49,31 @@
             <p class="mb-4 text-gray-700 dark:text-gray-300">{{ block.question }}</p>
 
             {% if state.submitted %}
-              <div class="p-4 rounded-lg mb-4 border transition-colors
-                {% if state.is_correct %}
-                  bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400
-                {% else %}
-                  bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400
-                {% endif %}">
-                Результат: {{ state.score }}%
-                {% if state.is_correct %} — всё верно!{% endif %}
+              <div class="p-4 rounded-lg mb-4 border transition-colors {% if state.is_correct %}bg-green-50 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-400{% else %}bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/30 dark:border-amber-800 dark:text-amber-400{% endif %}">
+                Результат: {{ state.score }}%{% if state.is_correct %} - все верно{% endif %}
               </div>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Попыток: {{ state.attempts_used }} / {{ state.max_attempts }}
-              </p>
             {% endif %}
 
-            {% if user.is_authenticated and state.can_submit %}
-              <form method="post" action="{% url 'lessons:submit_choice_answer' course.pk lesson.pk block.pk %}">
-                {% csrf_token %}
-                <ul class="space-y-2 mb-4">
-                  {% for answer in block.answers.all %}
-                    <li>
-                      <label class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded cursor-pointer hover:bg-gray-100 dark:bg-slate-700 dark:border-slate-600 dark:text-gray-200 dark:hover:bg-slate-600 transition-colors">
-                        {% if block.max_choices == 1 %}
-                          <input type="radio" name="answer" value="{{ answer.pk }}" class="text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-600" required>
-                        {% else %}
-                          <input type="checkbox" name="answer" value="{{ answer.pk }}" class="text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-600">
-                        {% endif %}
-                        <span>{{ answer.text }}</span>
-                      </label>
-                    </li>
-                  {% endfor %}
-                </ul>
-                <button type="submit"
-                        class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
-                  Проверить ответ
-                </button>
-              </form>
-            {% elif not user.is_authenticated %}
+            {% if user.is_authenticated %}
               <ul class="space-y-2 mb-4">
                 {% for answer in block.answers.all %}
-                  <li class="px-3 py-2 bg-gray-50 border border-gray-100 rounded dark:bg-slate-700 dark:border-slate-600 dark:text-gray-300">{{ answer.text }}</li>
+                  <li>
+                    <label class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded {% if state.can_submit %}cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-600{% else %}cursor-not-allowed opacity-75{% endif %} dark:bg-slate-700 dark:border-slate-600 dark:text-gray-200 transition-colors">
+                      {% if block.max_choices == 1 %}
+                        <input form="choice-check-form" type="radio" name="choice_{{ block.pk }}" value="{{ answer.pk }}" class="text-blue-600 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-600" {% if answer.pk in state.selected_ids %}checked{% endif %} {% if not state.can_submit %}disabled{% endif %}>
+                      {% else %}
+                        <input form="choice-check-form" type="checkbox" name="choice_{{ block.pk }}" value="{{ answer.pk }}" class="text-blue-600 rounded focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-600" {% if answer.pk in state.selected_ids %}checked{% endif %} {% if not state.can_submit %}disabled{% endif %}>
+                      {% endif %}
+                      <span>{{ answer.text }}</span>
+                    </label>
+                  </li>
                 {% endfor %}
               </ul>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                <a href="{% url 'users:login' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">Войдите</a>,
-                чтобы ответить.
-              </p>
-            {% elif not state.can_submit %}
-              <ul class="space-y-2">
-                {% for answer in block.answers.all %}
-                  <li class="px-3 py-2 bg-gray-50 border border-gray-100 rounded dark:bg-slate-700 dark:border-slate-600 dark:text-gray-300">{{ answer.text }}</li>
-                {% endfor %}
-              </ul>
-              <p class="text-sm text-amber-700 dark:text-amber-400 mt-4">Лимит попыток исчерпан или истёк срок сдачи.</p>
+              {% if not state.can_submit and not lesson_state.is_completed %}
+                <p class="text-sm text-amber-700 dark:text-amber-400 mt-4">Лимит попыток исчерпан или истек срок сдачи.</p>
+              {% endif %}
+            {% else %}
+              <p class="text-sm text-gray-500 dark:text-gray-400"><a href="{% url 'users:login' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">Войдите</a>, чтобы ответить.</p>
             {% endif %}
           </div>
 
@@ -131,78 +81,39 @@
           <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 transition-colors duration-200">
             <h3 class="font-semibold mb-2 dark:text-white">{{ block.title }}</h3>
             <p class="text-gray-600 dark:text-gray-300 whitespace-pre-wrap mb-4">{{ block.description }}</p>
-
             {% if state.submitted and state.uploaded_file %}
-              <p class="text-sm text-green-700 dark:text-green-400 mb-4">
-                ✓ Файл отправлен: {{ state.uploaded_file.name }}
-              </p>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                Попыток: {{ state.attempts_used }} / {{ state.max_attempts }}
-              </p>
+              <p class="text-sm text-green-700 dark:text-green-400 mb-4">Файл отправлен: {{ state.uploaded_file.name }}</p>
             {% endif %}
-
             {% if user.is_authenticated and state.can_submit %}
-              <form method="post" enctype="multipart/form-data"
-                    action="{% url 'lessons:submit_file_answer' course.pk lesson.pk block.pk %}">
+              <form method="post" enctype="multipart/form-data" action="{% url 'lessons:submit_file_answer' course.pk lesson.pk block.pk %}">
                 {% csrf_token %}
-                <input type="file" name="file" required
-                       class="block w-full text-sm text-gray-600 dark:text-gray-400 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-slate-700 dark:file:text-gray-200">
-                <button type="submit"
-                        class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
-                  Отправить файл
-                </button>
+                <input type="file" name="file" required class="block w-full text-sm text-gray-600 dark:text-gray-400 mb-4 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-slate-700 dark:file:text-gray-200">
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">Отправить файл</button>
               </form>
             {% elif not user.is_authenticated %}
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                <a href="{% url 'users:login' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">Войдите</a>,
-                чтобы загрузить файл.
-              </p>
-            {% elif not state.can_submit %}
-              <p class="text-sm text-amber-700 dark:text-amber-400">Лимит попыток исчерпан или истёк срок сдачи.</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400"><a href="{% url 'users:login' %}?next={{ request.path }}" class="text-blue-600 dark:text-blue-400 hover:underline">Войдите</a>, чтобы загрузить файл.</p>
+            {% elif not state.can_submit and not lesson_state.is_completed %}
+              <p class="text-sm text-amber-700 dark:text-amber-400">Лимит попыток исчерпан или истек срок сдачи.</p>
             {% endif %}
           </div>
 
         {% elif block.teachers_file %}
           <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 flex gap-4 items-start transition-colors duration-200">
-            <span class="text-2xl">📎</span>
             <div>
               <h4 class="font-medium mb-2 dark:text-white">Материал для скачивания</h4>
-              <a href="{{ block.teachers_file.url }}"
-                 class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors"
-                 download>
-                Скачать файл
-              </a>
+              <a href="{{ block.teachers_file.url }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors" download>Скачать файл</a>
             </div>
           </div>
-
         {% elif block.text %}
-          <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 whitespace-pre-wrap text-gray-800 dark:text-gray-200 transition-colors duration-200">
-            {{ block.text }}
-          </div>
-
+          <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 whitespace-pre-wrap text-gray-800 dark:text-gray-200 transition-colors duration-200">{{ block.text }}</div>
         {% elif block.image %}
-          <div class="rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 transition-colors duration-200">
-            <img src="{{ block.image.url }}" alt="" class="w-full h-auto">
-          </div>
-
+          <div class="rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-800 border border-transparent dark:border-slate-700 transition-colors duration-200"><img src="{{ block.image.url }}" alt="" class="w-full h-auto"></div>
         {% elif block.video %}
-          <div class="aspect-video bg-gray-900 rounded-lg overflow-hidden border border-transparent dark:border-slate-700">
-            <video controls class="w-full h-full">
-              <source src="{{ block.video.url }}">
-            </video>
-          </div>
-
+          <div class="aspect-video bg-gray-900 rounded-lg overflow-hidden border border-transparent dark:border-slate-700"><video controls class="w-full h-full"><source src="{{ block.video.url }}"></video></div>
         {% elif block.audio %}
-          <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 transition-colors duration-200">
-            <audio controls class="w-full dark:bg-slate-700 rounded-lg">
-              <source src="{{ block.audio.url }}">
-            </audio>
-          </div>
-
+          <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 transition-colors duration-200"><audio controls class="w-full dark:bg-slate-700 rounded-lg"><source src="{{ block.audio.url }}"></audio></div>
         {% else %}
-          <div class="bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg p-4 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
-            Неподдерживаемый тип блока
-          </div>
+          <div class="bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg p-4 text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">Неподдерживаемый тип блока</div>
         {% endif %}
 
         {% endwith %}
@@ -213,27 +124,63 @@
 
     <div class="flex items-center justify-between pt-6 border-t border-gray-200 dark:border-slate-700">
       {% if prev_lesson %}
-        <a href="{% url 'lessons:lesson_detail' course.pk prev_lesson.pk %}"
-           class="px-4 py-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
-          ← {{ prev_lesson.name }}
-        </a>
+        <a href="{% url 'lessons:lesson_detail' course.pk prev_lesson.pk %}" class="px-4 py-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">Назад</a>
       {% else %}
         <span></span>
       {% endif %}
 
-      {% if next_lesson %}
-        <a href="{% url 'lessons:lesson_detail' course.pk next_lesson.pk %}"
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
-          {{ next_lesson.name }} →
-        </a>
-      {% else %}
-        <a href="{% url 'lessons:course_detail' course.pk %}"
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
-          К курсу
-        </a>
-      {% endif %}
+      <div class="flex items-center gap-3 flex-wrap justify-end">
+        {% if attempt_summary.max %}
+          <span class="text-sm text-gray-500 dark:text-gray-400">Попыток: {{ attempt_summary.used }} / {{ attempt_summary.max }}</span>
+        {% endif %}
+        {% if lesson_state.score_percent != None %}
+          <span class="text-sm text-gray-500 dark:text-gray-400">Результат: {{ lesson_state.score_percent }}%</span>
+        {% endif %}
+        {% if lesson_state.is_completed %}
+          <span class="text-sm text-green-700 dark:text-green-400">Урок завершен</span>
+        {% elif not lesson_state.can_complete %}
+          <span class="text-sm text-amber-700 dark:text-amber-400">Выполните все задания</span>
+        {% endif %}
+        {% if can_check_choices %}
+          <form id="choice-check-form" method="post" action="{% url 'lessons:submit_lesson_choice_answers' course.pk lesson.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">Проверка</button>
+          </form>
+        {% elif has_choice_questions and user.is_authenticated and not lesson_state.is_completed %}
+          <button type="button" disabled class="px-4 py-2 bg-gray-200 text-gray-500 cursor-not-allowed rounded-lg dark:bg-slate-700 dark:text-gray-400">Проверка</button>
+        {% endif %}
+        <form method="post" action="{% url 'lessons:complete_lesson' course.pk lesson.pk %}">
+          {% csrf_token %}
+          <button type="submit" {% if not lesson_state.can_complete %}disabled{% endif %} class="px-4 py-2 rounded-lg transition-colors {% if lesson_state.can_complete %}bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500{% else %}bg-gray-200 text-gray-500 cursor-not-allowed dark:bg-slate-700 dark:text-gray-400{% endif %}">Закончить выполнение</button>
+        </form>
+        {% if next_lesson and lesson_state.is_completed %}
+          <a href="{% url 'lessons:lesson_detail' course.pk next_lesson.pk %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">Следующий урок</a>
+        {% endif %}
+      </div>
     </div>
-
   </div>
 </div>
+
+{% if user.is_authenticated %}
+<script>
+  (function () {
+    var endpoint = "{% url 'lessons:track_learning_time' course.pk lesson.pk %}";
+    var token = "{{ csrf_token }}";
+    var last = Date.now();
+    function sendTime() {
+      if (document.hidden) { last = Date.now(); return; }
+      var now = Date.now();
+      var seconds = Math.floor((now - last) / 1000);
+      last = now;
+      if (seconds <= 0) { return; }
+      var data = new FormData();
+      data.append("seconds", seconds);
+      fetch(endpoint, {method: "POST", body: data, headers: {"X-CSRFToken": token}, credentials: "same-origin", keepalive: true});
+    }
+    setInterval(sendTime, 60000);
+    window.addEventListener("beforeunload", sendTime);
+    document.addEventListener("visibilitychange", function () { if (document.hidden) { sendTime(); } else { last = Date.now(); } });
+  })();
+</script>
+{% endif %}
 {% endblock %}

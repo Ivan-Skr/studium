@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ course.name }} — Studium{% endblock %}
+{% block title %}{{ course.name }} - Studium{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-6">
@@ -28,9 +28,9 @@
         {% endif %}
       </div>
 
-      {% if course.image %}
-        <div class="aspect-video bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-8">
-          <img src="{{ course.image.url }}" alt="{{ course.name }}" class="w-full h-full object-cover">
+      {% if course.display_detail_image %}
+        <div class="bg-gray-100 dark:bg-slate-800 rounded-lg overflow-hidden mb-8">
+          <img src="{{ course.display_detail_image.url }}" alt="{{ course.name }}" class="w-full h-auto object-contain">
         </div>
       {% endif %}
 
@@ -39,13 +39,32 @@
 
         <div class="space-y-2">
           {% for lesson in lessons %}
-            <a href="{% url 'lessons:lesson_detail' course.pk lesson.pk %}"
-               class="block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-slate-750 transition-colors group">
-              <div class="flex items-center gap-3">
-                <span class="text-gray-400 dark:text-gray-500 font-mono text-sm w-8">{{ lesson.order }}</span>
-                <span class="font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ lesson.name }}</span>
+            {% if can_start_learning %}
+              <a href="{% url 'lessons:lesson_detail' course.pk lesson.pk %}"
+                 class="block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-slate-750 transition-colors group">
+                <div class="flex items-center gap-3 justify-between">
+                  <div class="flex items-center gap-3">
+                  <span class="text-gray-400 dark:text-gray-500 font-mono text-sm w-8">{{ lesson.order }}</span>
+                  <span class="font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ lesson.name }}</span>
+                  </div>
+                  {% if lesson.student_score_percent != None %}
+                    <span class="text-sm text-gray-500 dark:text-gray-400">{{ lesson.student_score_percent }}%</span>
+                  {% endif %}
+                </div>
+              </a>
+            {% else %}
+              <div class="block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 opacity-70">
+                <div class="flex items-center gap-3 justify-between">
+                  <div class="flex items-center gap-3">
+                  <span class="text-gray-400 dark:text-gray-500 font-mono text-sm w-8">{{ lesson.order }}</span>
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ lesson.name }}</span>
+                  </div>
+                  {% if lesson.student_score_percent != None %}
+                    <span class="text-sm text-gray-500 dark:text-gray-400">{{ lesson.student_score_percent }}%</span>
+                  {% endif %}
+                </div>
               </div>
-            </a>
+            {% endif %}
           {% empty %}
             <p class="text-gray-500 dark:text-gray-400 text-center py-8">Уроков пока нет</p>
           {% endfor %}
@@ -69,11 +88,39 @@
             </div>
           {% endif %}
         </dl>
-        {% if lessons %}
+
+        {% if user.is_authenticated %}
+          {% if can_start_learning and lessons %}
             <a href="{% url 'lessons:lesson_detail' course.pk lessons.0.pk %}"
                class="mt-6 block w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
               Начать обучение
             </a>
+          {% elif can_start_learning %}
+            <p class="mt-6 text-sm text-gray-500 dark:text-gray-400">В курсе пока нет уроков.</p>
+          {% elif enrollment and enrollment.status == "pending" %}
+            <p class="mt-6 text-sm text-amber-700 dark:text-amber-400">Заявка отправлена. Дождитесь подтверждения преподавателя.</p>
+          {% else %}
+            <form method="post" action="{% url 'lessons:enroll_course' course.pk %}" class="mt-6 space-y-4">
+              {% csrf_token %}
+              {% if enrollment_form %}
+                <div>
+                  <label for="{{ enrollment_form.code.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {{ enrollment_form.code.label }}
+                  </label>
+                  {{ enrollment_form.code }}
+                </div>
+              {% endif %}
+              <button type="submit"
+                      class="block w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
+                {% if course.requires_enrollment_code %}Подать заявку{% else %}Записаться на курс{% endif %}
+              </button>
+            </form>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'users:login' %}?next={{ request.path }}"
+             class="mt-6 block w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-center hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
+            Войти, чтобы записаться
+          </a>
         {% endif %}
       </div>
     </aside>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена - Studium{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-6 py-16 text-center">
+  <h1 class="text-4xl font-bold mb-4 dark:text-white">404</h1>
+  <p class="text-gray-600 dark:text-gray-300 mb-6">Страница не найдена или у вас нет доступа к этому разделу.</p>
+  <a href="{% url 'lessons:catalog' %}"
+     class="inline-block px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
+    Перейти к курсам
+  </a>
+</div>
+{% endblock %}

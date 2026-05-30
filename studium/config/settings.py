@@ -38,6 +38,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "config.middleware.Friendly404Middleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

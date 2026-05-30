@@ -23,7 +23,19 @@ class Category(models.Model):
 class Course(models.Model):
     name = models.CharField("Название", max_length=30)
     description = models.TextField("Описание")
-    image = models.ImageField("Изображение", upload_to="images/courses/")
+    image = models.ImageField("Обложка", upload_to="images/courses/covers/", blank=True)
+    detail_image = models.ImageField(
+        "Фото для страницы курса",
+        upload_to="images/courses/details/",
+        null=True,
+        blank=True,
+    )
+    enrollment_code = models.CharField(
+        "Кодовое слово для записи",
+        max_length=50,
+        blank=True,
+        help_text="Оставьте пустым, чтобы студенты записывались сразу.",
+    )
     is_published = models.BooleanField("Опубликован", default=True)
     created_at = models.DateTimeField("Добавлен", auto_now_add=True)
     author = models.ForeignKey(
@@ -51,9 +63,267 @@ class Course(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def requires_enrollment_code(self):
+        return bool(self.enrollment_code.strip())
+
+    @property
+    def display_detail_image(self):
+        return self.detail_image or self.image
+
+
+class CourseEnrollment(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", "На рассмотрении"
+        APPROVED = "approved", "Записан"
+        REJECTED = "rejected", "Отклонена"
+
+    course = models.ForeignKey(
+        Course,
+        verbose_name="Курс",
+        on_delete=models.CASCADE,
+        related_name="enrollments",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Студент",
+        on_delete=models.CASCADE,
+        related_name="course_enrollments",
+    )
+    status = models.CharField(
+        "Статус",
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+    )
+    group = models.ForeignKey(
+        "StudentGroup",
+        verbose_name="Группа",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="enrollments",
+    )
+    requested_at = models.DateTimeField("Заявка отправлена", auto_now_add=True)
+    updated_at = models.DateTimeField("Обновлено", auto_now=True)
+
+    class Meta:
+        verbose_name = "Запись на курс"
+        verbose_name_plural = "Записи на курсы"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "student"],
+                name="unique_course_enrollment",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["course", "status"]),
+            models.Index(fields=["student", "status"]),
+        ]
+        ordering = ["-requested_at"]
+
+    def __str__(self):
+        return f"{self.student} -> {self.course} ({self.get_status_display()})"
+
+
+class LessonProgress(models.Model):
+    lesson = models.ForeignKey(
+        "Lesson",
+        verbose_name="Урок",
+        on_delete=models.CASCADE,
+        related_name="progress",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Студент",
+        on_delete=models.CASCADE,
+        related_name="lesson_progress",
+    )
+    completed_at = models.DateTimeField("Завершен", default=timezone.now)
+    score_percent = models.PositiveSmallIntegerField(
+        "Процент сдачи",
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    )
+
+    class Meta:
+        verbose_name = "Прогресс урока"
+        verbose_name_plural = "Прогресс уроков"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["lesson", "student"],
+                name="unique_lesson_progress",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["student", "lesson"]),
+        ]
+
+    def __str__(self):
+        return f"{self.student} -> {self.lesson}"
+
+
+class LessonStudyTime(models.Model):
+    lesson = models.ForeignKey(
+        "Lesson",
+        verbose_name="Урок",
+        on_delete=models.CASCADE,
+        related_name="study_times",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Студент",
+        on_delete=models.CASCADE,
+        related_name="lesson_study_times",
+    )
+    seconds = models.PositiveIntegerField("Секунды", default=0)
+    updated_at = models.DateTimeField("Обновлено", auto_now=True)
+
+    class Meta:
+        verbose_name = "Время на урок"
+        verbose_name_plural = "Время на уроках"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["lesson", "student"],
+                name="unique_lesson_study_time",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["student", "lesson"]),
+        ]
+
+    def __str__(self):
+        return f"{self.student} → {self.lesson}: {self.seconds} сек."
+
+
+
+class CourseCompletion(models.Model):
+    course = models.ForeignKey(
+        Course,
+        verbose_name="Курс",
+        on_delete=models.CASCADE,
+        related_name="completions",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Студент",
+        on_delete=models.CASCADE,
+        related_name="course_completions",
+    )
+    completed_at = models.DateTimeField("Завершен", default=timezone.now)
+
+    class Meta:
+        verbose_name = "Завершение курса"
+        verbose_name_plural = "Завершения курсов"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "student"],
+                name="unique_course_completion",
+            ),
+        ]
+        indexes = [
+            models.Index(fields=["student", "course"]),
+        ]
+
+    def __str__(self):
+        return f"{self.student} -> {self.course}"
+
+
+class CertificateTemplate(models.Model):
+    course = models.ForeignKey(
+        Course,
+        verbose_name="Курс",
+        on_delete=models.CASCADE,
+        related_name="certificate_templates",
+    )
+    title = models.CharField("Название", max_length=100)
+    description = models.TextField("Описание", blank=True)
+    image = models.ImageField(
+        "Изображение",
+        upload_to="images/certificates/",
+        null=True,
+        blank=True,
+    )
+    is_completion_certificate = models.BooleanField(
+        "Выдается за прохождение курса",
+        default=False,
+    )
+    created_at = models.DateTimeField("Создан", auto_now_add=True)
+    updated_at = models.DateTimeField("Обновлен", auto_now=True)
+
+    class Meta:
+        verbose_name = "Сертификат курса"
+        verbose_name_plural = "Сертификаты курсов"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course"],
+                condition=models.Q(is_completion_certificate=True),
+                name="unique_completion_certificate_per_course",
+            ),
+        ]
+        ordering = ["-is_completion_certificate", "title"]
+
+    def __str__(self):
+        return self.title
+
+
+class StudentCertificate(models.Model):
+    template = models.ForeignKey(
+        CertificateTemplate,
+        verbose_name="Шаблон сертификата",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_certificates",
+    )
+    course = models.ForeignKey(
+        Course,
+        verbose_name="Курс",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="student_certificates",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="Студент",
+        on_delete=models.CASCADE,
+        related_name="certificates",
+    )
+    title = models.CharField("Название", max_length=100)
+    description = models.TextField("Описание", blank=True)
+    image = models.ImageField(
+        "Изображение",
+        upload_to="images/student_certificates/",
+        null=True,
+        blank=True,
+    )
+    is_completion_certificate = models.BooleanField(default=False)
+    issued_at = models.DateTimeField("Выдан", default=timezone.now)
+
+    class Meta:
+        verbose_name = "Сертификат студента"
+        verbose_name_plural = "Сертификаты студентов"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["template", "student"],
+                name="unique_student_certificate_template",
+            ),
+        ]
+        ordering = ["-issued_at"]
+
+    def __str__(self):
+        return f"{self.student} -> {self.title}"
+
 
 class Lesson(models.Model):
     name = models.CharField("Название", max_length=50)
+    deadline = models.DateTimeField(
+        "Дедлайн урока",
+        null=True,
+        blank=True,
+        help_text="Общий срок сдачи всех заданий урока.",
+    )
     course = models.ForeignKey(
         Course,
         verbose_name="Курс",
@@ -221,7 +491,6 @@ class TeacherFileBlock(Block):
 class TextQuestion(Block):
     question = models.CharField("Вопрос", max_length=200)
     correct_answer = models.CharField("Правильный ответ", max_length=100)
-    deadline = models.DateTimeField("Срок сдачи", null=True, blank=True)
     max_attempts = models.PositiveSmallIntegerField(
         "Максимум попыток",
         default=3,
@@ -243,7 +512,6 @@ class ChoiceQuestion(Block):
         default=1,
         validators=[MinValueValidator(1)],
     )
-    deadline = models.DateTimeField("Срок сдачи", null=True, blank=True)
     max_attempts = models.PositiveSmallIntegerField(
         "Максимум попыток",
         default=3,
@@ -272,7 +540,6 @@ class ChoiceQuestion(Block):
 class FileQuestion(Block):
     title = models.CharField("Название", max_length=50)
     description = models.TextField("Описание")
-    deadline = models.DateTimeField("Срок сдачи", null=True, blank=True)
     max_attempts = models.PositiveSmallIntegerField(
         "Максимум попыток",
         default=3,
@@ -348,9 +615,9 @@ class TextAnswerSubmission(models.Model):
     def clean(self):
         super().clean()
 
-        if self.question_id and self.question.deadline:
-            if timezone.now() > self.question.deadline:
-                raise ValidationError("Дедлайн уже прошёл. Нельзя отправить ответ.")
+        if self.question_id and self.question.lesson.deadline:
+            if timezone.now() > self.question.lesson.deadline:
+                raise ValidationError("Дедлайн урока уже прошёл. Нельзя отправить ответ.")
 
         if self.attempt is None and self.student_id and self.question_id:
             last = (
@@ -416,9 +683,9 @@ class ChoiceAnswerSubmission(models.Model):
     def clean(self):
         super().clean()
 
-        if self.question_id and self.question.deadline:
-            if timezone.now() > self.question.deadline:
-                raise ValidationError("Дедлайн уже прошёл. Нельзя отправить ответ.")
+        if self.question_id and self.question.lesson.deadline:
+            if timezone.now() > self.question.lesson.deadline:
+                raise ValidationError("Дедлайн урока уже прошёл. Нельзя отправить ответ.")
 
         if self.attempt is None and self.student_id and self.question_id:
             last = (
@@ -536,9 +803,9 @@ class FileAnswerSubmission(models.Model):
     def clean(self):
         super().clean()
 
-        if self.question_id and self.question.deadline:
-            if timezone.now() > self.question.deadline:
-                raise ValidationError("Дедлайн уже прошёл. Нельзя отправить файл.")
+        if self.question_id and self.question.lesson.deadline:
+            if timezone.now() > self.question.lesson.deadline:
+                raise ValidationError("Дедлайн урока уже прошёл. Нельзя отправить файл.")
 
         if self.student_id and self.question_id:
             existing_attempts = (
@@ -554,3 +821,27 @@ class FileAnswerSubmission(models.Model):
                     "Превышено максимальное число попыток "
                     f"({self.question.max_attempts})."
                 )
+
+class StudentGroup(models.Model):
+    course = models.ForeignKey(
+        Course,
+        verbose_name="Курс",
+        on_delete=models.CASCADE,
+        related_name="student_groups",
+    )
+    name = models.CharField("Название группы", max_length=100)
+    created_at = models.DateTimeField("Создана", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Группа студентов"
+        verbose_name_plural = "Группы студентов"
+        ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["course", "name"],
+                name="unique_student_group_name_per_course",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.name} — {self.course}"

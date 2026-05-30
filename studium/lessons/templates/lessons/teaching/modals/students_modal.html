@@ -1,0 +1,204 @@
+<div class="border-b border-gray-200 dark:border-slate-700 p-6 flex items-start justify-between">
+  <div>
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Студенты курса</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1">
+      {% firstof active_course.name %}
+    </p>
+  </div>
+
+  <a href="{% url 'lessons:teacher_course_list' %}"
+     class="text-3xl leading-none text-gray-900 dark:text-white hover:opacity-70"
+     aria-label="Закрыть">
+    ×
+  </a>
+</div>
+
+<div class="p-6 space-y-6">
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div class="bg-gray-50 dark:bg-slate-800 rounded-xl p-5">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Всего студентов</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">
+        {% firstof student_rows|length 0 %}
+      </p>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-slate-800 rounded-xl p-5">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Средний прогресс</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">
+        {% firstof students_average_progress 0 %}%
+      </p>
+    </div>
+
+    <div class="bg-gray-50 dark:bg-slate-800 rounded-xl p-5">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Завершили курс</p>
+      <p class="text-3xl font-bold text-gray-900 dark:text-white">
+        {% firstof students_completed_count 0 %}
+      </p>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-3">
+    <a href="{% url 'lessons:teacher_course_list' %}?groups={% firstof active_course.pk %}"
+       class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-950 text-white dark:bg-white dark:text-slate-950 rounded-xl font-semibold hover:opacity-90 transition-opacity">
+      <span>👥</span>
+      Управление группами
+    </a>
+
+    <a href="{% url 'lessons:teacher_course_list' %}?progress={% firstof active_course.pk %}"
+       class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-950 text-white dark:bg-white dark:text-slate-950 rounded-xl font-semibold hover:opacity-90 transition-opacity">
+      <span>▦</span>
+      Таблица прогресса
+    </a>
+  </div>
+
+  <form method="get" class="flex flex-col lg:flex-row gap-3">
+    <input type="hidden" name="students" value="{% firstof active_course.pk %}">
+
+    <div class="relative flex-1">
+      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">⌕</span>
+
+      <input type="search"
+             name="student_q"
+             value="{% firstof request.GET.student_q '' %}"
+             placeholder="Поиск студентов..."
+             class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white">
+    </div>
+
+    <select name="group"
+            onchange="this.form.submit()"
+            class="px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white">
+      <option value="">Все группы</option>
+
+      {% for group in groups %}
+        <option value="{% firstof group.pk %}" {% if selected_group_id == group.pk|stringformat:"s" %}selected{% endif %}>
+          {% firstof group.name %}
+        </option>
+      {% endfor %}
+    </select>
+
+    <select name="sort"
+            onchange="this.form.submit()"
+            class="px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-white">
+      <option value="progress_desc" {% if request.GET.sort == "progress_desc" or not request.GET.sort %}selected{% endif %}>
+        По прогрессу
+      </option>
+      <option value="progress_asc" {% if request.GET.sort == "progress_asc" %}selected{% endif %}>
+        Сначала отстающие
+      </option>
+      <option value="name" {% if request.GET.sort == "name" %}selected{% endif %}>
+        По имени
+      </option>
+      <option value="activity" {% if request.GET.sort == "activity" %}selected{% endif %}>
+        По активности
+      </option>
+    </select>
+
+    <button type="submit"
+            class="px-5 py-3 rounded-xl bg-slate-950 text-white dark:bg-white dark:text-slate-950 font-semibold hover:opacity-90 transition-opacity">
+      Найти
+    </button>
+  </form>
+
+  <div class="space-y-4">
+    {% for row in student_rows %}
+      <div class="border border-gray-200 dark:border-slate-700 rounded-xl p-5 bg-white dark:bg-slate-900">
+        <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+              <span class="font-bold text-gray-700 dark:text-gray-200">
+                👤
+              </span>
+            </div>
+
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="font-bold text-lg text-gray-900 dark:text-white">
+                  {% firstof row.name %}
+                </h3>
+
+                {% if row.enrollment.group %}
+                  <span class="text-xs px-2 py-1 rounded-md bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
+                    {% firstof row.enrollment.group.name %}
+                  </span>
+                {% endif %}
+              </div>
+
+              <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {% if row.student.email %}
+                  <span>✉ {% firstof row.student.email %}</span>
+                {% endif %}
+
+                {% if row.enrollment.requested_at %}
+                  <span>📅 {% firstof row.enrollment.requested_at|date:"Y-m-d" %}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          {% if row.is_completed %}
+            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-sm font-medium">
+              ✓ Завершен
+            </span>
+          {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-5">
+
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Прогресс</p>
+
+            <div class="flex items-center gap-3">
+              <div class="h-2 flex-1 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div class="h-full bg-slate-950 dark:bg-white rounded-full"
+                     style="width: {% widthratio row.progress_percent|default:0 1 1 %}%;"></div>
+              </div>
+
+              <span class="font-semibold text-gray-900 dark:text-white">
+                {% firstof row.progress_percent 0 %}%
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Уроков</p>
+            <p class="font-semibold text-gray-900 dark:text-white">
+              {% firstof row.completed_count 0 %} / {% firstof row.lessons_count 0 %}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Время</p>
+            <p class="font-semibold text-gray-900 dark:text-white">
+              ◷ {% firstof row.time_label "0 ч" %}
+            </p>
+          </div>
+
+          <div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">Активность</p>
+            <p class="font-semibold text-gray-900 dark:text-white">
+              {% if row.last_activity %}
+                ~ {% firstof row.last_activity|timesince %} назад
+              {% else %}
+                —
+              {% endif %}
+            </p>
+          </div>
+
+        </div>
+      </div>
+    {% empty %}
+      <div class="border border-dashed border-gray-300 dark:border-slate-700 rounded-xl p-10 text-center">
+        <p class="text-gray-500 dark:text-gray-400">Студенты не найдены.</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 p-6">
+  <a href="{% url 'lessons:teacher_course_list' %}"
+     class="block w-full text-center px-5 py-3 border border-gray-300 dark:border-slate-600 rounded-xl font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+    Закрыть
+  </a>
+</div>

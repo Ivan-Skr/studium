@@ -4,6 +4,7 @@ from django.forms import inlineformset_factory
 from .models import (
     AudioBlock,
     Category,
+    CertificateTemplate,
     ChoiceAnswer,
     ChoiceQuestion,
     Course,
@@ -23,9 +24,7 @@ INPUT_CLASS = (
     "focus:outline-none focus:ring-2 focus:ring-blue-500"
 )
 CHECKBOX_CLASS = "rounded border-gray-300 text-blue-600"
-DATETIME_INPUT_FORMATS = ["%Y-%m-%dT%H:%M",
-                          "%Y-%m-%d %H:%M:%S",
-                          "%Y-%m-%d %H:%M"]
+DATETIME_INPUT_FORMATS = ["%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"]
 
 
 def _datetime_widget():
@@ -45,12 +44,22 @@ def _apply_file_edit_mode(form, file_fields):
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ("name", "description", "image", "category", "is_published")
+        fields = (
+            "name",
+            "description",
+            "image",
+            "detail_image",
+            "category",
+            "enrollment_code",
+            "is_published",
+        )
         labels = {
             "name": "Название",
             "description": "Описание",
             "image": "Обложка",
+            "detail_image": "Фото для страницы курса",
             "category": "Категория",
+            "enrollment_code": "Кодовое слово",
             "is_published": "Опубликован (виден в каталоге)",
         }
         widgets = {
@@ -58,10 +67,17 @@ class CourseForm(forms.ModelForm):
                 attrs={"class": INPUT_CLASS, "placeholder": "Название курса"}
             ),
             "description": forms.Textarea(
-                attrs={"class":INPUT_CLASS, "rows":5, "placeholder":"Описание курса"}
+                attrs={"class": INPUT_CLASS, "rows": 5, "placeholder": "Описание курса"}
             ),
             "image": forms.FileInput(attrs={"class": INPUT_CLASS}),
+            "detail_image": forms.FileInput(attrs={"class": INPUT_CLASS}),
             "category": forms.Select(attrs={"class": INPUT_CLASS}),
+            "enrollment_code": forms.TextInput(
+                attrs={
+                    "class": INPUT_CLASS,
+                    "placeholder": "Оставьте пустым для открытой записи",
+                }
+            ),
             "is_published": forms.CheckboxInput(
                 attrs={"class": "rounded border-gray-300 text-blue-600"}
             ),
@@ -74,18 +90,99 @@ class CourseForm(forms.ModelForm):
         self.fields["category"].empty_label = "Без категории"
         if is_edit:
             self.fields["image"].required = False
+            self.fields["detail_image"].required = False
+
+
+class EnrollmentCodeForm(forms.Form):
+    code = forms.CharField(
+        label="Кодовое слово",
+        max_length=50,
+        widget=forms.TextInput(attrs={"class": INPUT_CLASS}),
+    )
+
+    def __init__(self, *args, course=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.course = course
+
+    def clean_code(self):
+        code = self.cleaned_data["code"].strip()
+        if self.course and code != self.course.enrollment_code:
+            raise forms.ValidationError("Неверное кодовое слово.")
+        return code
+
+
+class CertificateTemplateForm(forms.ModelForm):
+    class Meta:
+        model = CertificateTemplate
+        fields = ("title", "description", "image", "is_completion_certificate")
+        labels = {
+            "title": "Название сертификата",
+            "description": "Описание",
+            "image": "Изображение",
+            "is_completion_certificate": "Выдавать за прохождение всего курса",
+        }
+        widgets = {
+            "title": forms.TextInput(attrs={"class": INPUT_CLASS}),
+            "description": forms.Textarea(attrs={"class": INPUT_CLASS, "rows": 3}),
+            "image": forms.FileInput(attrs={"class": INPUT_CLASS}),
+            "is_completion_certificate": forms.CheckboxInput(
+                attrs={"class": CHECKBOX_CLASS}
+            ),
+        }
+
+    def __init__(self, *args, course=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.course = course
+        if self.instance and self.instance.pk:
+            self.fields["image"].required = False
+
+        existing_completion = None
+        if course is not None:
+            existing_completion = course.certificate_templates.filter(
+                is_completion_certificate=True
+            ).first()
+
+        if existing_completion and (
+            not self.instance.pk or self.instance.pk != existing_completion.pk
+        ):
+            self.fields["is_completion_certificate"].disabled = True
+            self.fields["is_completion_certificate"].help_text = (
+                "Сертификат за прохождение курса уже создан."
+            )
+
+    def clean_is_completion_certificate(self):
+        value = self.cleaned_data.get("is_completion_certificate")
+        if not value or self.course is None:
+            return value
+        existing = self.course.certificate_templates.filter(
+            is_completion_certificate=True
+        )
+        if self.instance.pk:
+            existing = existing.exclude(pk=self.instance.pk)
+        if existing.exists():
+            raise forms.ValidationError("Для курса уже есть сертификат за прохождение.")
+        return value
 
 
 class LessonForm(forms.ModelForm):
     class Meta:
         model = Lesson
-        fields = ("name",)
-        labels = {"name": "Название урока"}
+        fields = ("name", "deadline")
+        labels = {
+            "name": "Название урока",
+            "deadline": "Дедлайн урока",
+        }
         widgets = {
             "name": forms.TextInput(
                 attrs={"class": INPUT_CLASS, "placeholder": "Название урока"}
             ),
+            "deadline": _datetime_widget(),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["deadline"].required = False
+        self.fields["deadline"].input_formats = DATETIME_INPUT_FORMATS
 
 
 class TextBlockForm(forms.ModelForm):
@@ -95,7 +192,7 @@ class TextBlockForm(forms.ModelForm):
         labels = {"text": "Текст"}
         widgets = {
             "text": forms.Textarea(
-                attrs={"class":INPUT_CLASS, "rows":8, "placeholder":"Текст урока"}
+                attrs={"class": INPUT_CLASS, "rows": 8, "placeholder": "Текст урока"}
             ),
         }
 
@@ -141,7 +238,7 @@ class TeacherFileBlockForm(forms.ModelForm):
         model = TeacherFileBlock
         fields = ("teachers_file",)
         labels = {"teachers_file": "Файл для студентов"}
-        widgets = {"teachers_file": forms.FileInput(attrs={"class":INPUT_CLASS})}
+        widgets = {"teachers_file": forms.FileInput(attrs={"class": INPUT_CLASS})}
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -151,70 +248,58 @@ class TeacherFileBlockForm(forms.ModelForm):
 class TextQuestionForm(forms.ModelForm):
     class Meta:
         model = TextQuestion
-        fields = ("question", "correct_answer", "deadline", "max_attempts")
+        fields = ("question", "correct_answer", "max_attempts")
         labels = {
             "question": "Вопрос",
             "correct_answer": "Правильный ответ",
-            "deadline": "Срок сдачи (необязательно)",
             "max_attempts": "Максимум попыток",
         }
         widgets = {
             "question": forms.TextInput(attrs={"class": INPUT_CLASS}),
             "correct_answer": forms.TextInput(attrs={"class": INPUT_CLASS}),
-            "deadline": _datetime_widget(),
             "max_attempts": forms.NumberInput(attrs={"class": INPUT_CLASS, "min": 1}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["deadline"].required = False
-        self.fields["deadline"].input_formats = DATETIME_INPUT_FORMATS
 
 
 class ChoiceQuestionForm(forms.ModelForm):
     class Meta:
         model = ChoiceQuestion
-        fields = ("question", "max_choices", "deadline", "max_attempts")
+        fields = ("question", "max_choices", "max_attempts")
         labels = {
             "question": "Вопрос",
             "max_choices": "Сколько вариантов можно отметить верными",
-            "deadline": "Срок сдачи (необязательно)",
             "max_attempts": "Максимум попыток",
         }
         widgets = {
             "question": forms.TextInput(attrs={"class": INPUT_CLASS}),
             "max_choices": forms.NumberInput(attrs={"class": INPUT_CLASS, "min": 1}),
-            "deadline": _datetime_widget(),
             "max_attempts": forms.NumberInput(attrs={"class": INPUT_CLASS, "min": 1}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["deadline"].required = False
-        self.fields["deadline"].input_formats = DATETIME_INPUT_FORMATS
 
 
 class FileQuestionForm(forms.ModelForm):
     class Meta:
         model = FileQuestion
-        fields = ("title", "description", "deadline", "max_attempts")
+        fields = ("title", "description", "max_attempts")
         labels = {
             "title": "Название задания",
             "description": "Описание",
-            "deadline": "Срок сдачи (необязательно)",
             "max_attempts": "Максимум попыток",
         }
         widgets = {
             "title": forms.TextInput(attrs={"class": INPUT_CLASS}),
             "description": forms.Textarea(attrs={"class": INPUT_CLASS, "rows": 4}),
-            "deadline": _datetime_widget(),
             "max_attempts": forms.NumberInput(attrs={"class": INPUT_CLASS, "min": 1}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["deadline"].required = False
-        self.fields["deadline"].input_formats = DATETIME_INPUT_FORMATS
 
 
 class ChoiceAnswerForm(forms.ModelForm):

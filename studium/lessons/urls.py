@@ -6,6 +6,12 @@ app_name = "lessons"
 
 urlpatterns = [
     path("", views.catalog, name="catalog"),
+    path("calendar/", views.student_calendar, name="student_calendar"),
+    path(
+        "calendar/<str:token>.ics",
+        views.student_calendar_ics,
+        name="student_calendar_ics",
+    ),
     path("teaching/", teaching_views.teacher_course_list, name="teacher_course_list"),
     path(
         "teaching/new/",
@@ -21,6 +27,31 @@ urlpatterns = [
         "teaching/<int:course_id>/delete/",
         teaching_views.teacher_course_delete,
         name="teacher_course_delete",
+    ),
+    path(
+        "teaching/<int:course_id>/enrollments/<int:enrollment_id>/<slug:decision>/",
+        teaching_views.teacher_enrollment_decide,
+        name="teacher_enrollment_decide",
+    ),
+    path(
+        "teaching/<int:course_id>/certificates/create/",
+        teaching_views.teacher_certificate_create,
+        name="teacher_certificate_create",
+    ),
+    path(
+        "teaching/<int:course_id>/certificates/<int:certificate_id>/update/",
+        teaching_views.teacher_certificate_update,
+        name="teacher_certificate_update",
+    ),
+    path(
+        "teaching/<int:course_id>/certificates/<int:certificate_id>/delete/",
+        teaching_views.teacher_certificate_delete,
+        name="teacher_certificate_delete",
+    ),
+    path(
+        "teaching/<int:course_id>/certificates/<int:certificate_id>/assign/",
+        teaching_views.teacher_certificate_assign,
+        name="teacher_certificate_assign",
     ),
     path(
         "teaching/<int:course_id>/lessons/add/",
@@ -67,21 +98,51 @@ urlpatterns = [
         teaching_views.teacher_lesson_delete,
         name="teacher_lesson_delete",
     ),
+    path(
+        "teaching/<int:course_id>/groups/create/",
+        teaching_views.teacher_group_create,
+        name="teacher_group_create",
+    ),
+    path(
+        "teaching/<int:course_id>/groups/<int:group_id>/update/",
+        teaching_views.teacher_group_update,
+        name="teacher_group_update",
+    ),
+    path(
+        "teaching/<int:course_id>/groups/<int:group_id>/delete/",
+        teaching_views.teacher_group_delete,
+        name="teacher_group_delete",
+    ),
     path("courses/<int:course_id>/", views.course_detail, name="course_detail"),
+    path(
+        "courses/<int:course_id>/enroll/",
+        views.enroll_course,
+        name="enroll_course",
+    ),
     path(
         "courses/<int:course_id>/lessons/<int:lesson_id>/",
         views.lesson_detail,
         name="lesson_detail",
     ),
     path(
+        "courses/<int:course_id>/lessons/<int:lesson_id>/track-time/",
+        views.track_learning_time,
+        name="track_learning_time",
+    ),
+    path(
+        "courses/<int:course_id>/lessons/<int:lesson_id>/complete/",
+        views.complete_lesson,
+        name="complete_lesson",
+    ),
+    path(
+        "courses/<int:course_id>/lessons/<int:lesson_id>/check-choices/",
+        views.submit_lesson_choice_answers,
+        name="submit_lesson_choice_answers",
+    ),
+    path(
         "courses/<int:course_id>/lessons/<int:lesson_id>/blocks/<int:block_id>/text/",
         views.submit_text_answer,
         name="submit_text_answer",
-    ),
-    path(
-        "courses/<int:course_id>/lessons/<int:lesson_id>/blocks/<int:block_id>/choice/",
-        views.submit_choice_answer,
-        name="submit_choice_answer",
     ),
     path(
         "courses/<int:course_id>/lessons/<int:lesson_id>/blocks/<int:block_id>/file/",

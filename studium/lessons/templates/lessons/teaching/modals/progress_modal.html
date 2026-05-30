@@ -1,0 +1,109 @@
+<div class="border-b border-gray-200 dark:border-slate-700 p-6 flex items-start justify-between">
+  <div>
+    <h2 class="text-2xl font-bold">Таблица прогресса</h2>
+    <p class="text-gray-500 dark:text-gray-400 mt-1">{{ active_course.name }}</p>
+  </div>
+  <a href="{% url 'lessons:teacher_course_list' %}?students={{ active_course.pk }}" class="text-3xl leading-none hover:opacity-70">×</a>
+</div>
+
+<div class="p-6">
+  <form method="get" class="flex items-center justify-between gap-4 mb-6">
+    <input type="hidden" name="progress" value="{{ active_course.pk }}">
+
+    <div class="flex items-center gap-3">
+      <label class="text-sm text-gray-500 dark:text-gray-400">Фильтр по группе:</label>
+      <select name="group"
+              onchange="this.form.submit()"
+              class="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-800 dark:text-white">
+        <option value="">Все студенты</option>
+        {% for group in groups %}
+          <option value="{{ group.pk }}" {% if selected_group_id == group.pk|stringformat:"s" %}selected{% endif %}>{{ group.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <p class="text-sm text-gray-500 dark:text-gray-400">
+      Показано: {{ progress_table.rows|length }}
+    </p>
+  </form>
+
+  <div class="overflow-x-auto border border-gray-200 dark:border-slate-700 rounded-xl">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-100 dark:bg-slate-800">
+        <tr>
+          <th class="text-left p-4 font-semibold">Студент</th>
+          <th class="text-left p-4 font-semibold">Группа</th>
+          {% for lesson in progress_table.lessons %}
+            <th class="text-center p-4 font-semibold min-w-36">
+              Урок {{ lesson.order }}
+              <div class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-1">{{ lesson.name }}</div>
+            </th>
+          {% endfor %}
+          <th class="text-center p-4 font-semibold">Общий прогресс</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-gray-200 dark:divide-slate-700">
+        {% for row in progress_table.rows %}
+          <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/60">
+            <td class="p-4">
+              <p class="font-bold">{{ row.name }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400">{{ row.student.email }}</p>
+            </td>
+            <td class="p-4">
+              {% if row.enrollment.group %}
+                <span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-slate-700">{{ row.enrollment.group.name }}</span>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+
+            {% for cell in row.lesson_cells %}
+              <td class="p-4 text-center">
+                {% if cell.is_completed %}
+                  <div class="text-green-600 dark:text-green-400 text-xl">✓</div>
+                  {% if cell.score_percent != None %}
+                    <div class="text-xs text-amber-600 dark:text-amber-400 mt-1">🏅 {{ cell.score_percent }}%</div>
+                  {% endif %}
+                  <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">◷ {{ cell.time_label }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ cell.completed_at|date:"Y-m-d" }}</div>
+                {% else %}
+                  <div class="text-gray-400 text-xl">⊗</div>
+                {% endif %}
+              </td>
+            {% endfor %}
+
+            <td class="p-4 text-center">
+              <div class="mx-auto w-16 h-16 rounded-full border-4 border-slate-950 dark:border-white flex items-center justify-center font-bold">
+                {{ row.progress_percent }}%
+              </div>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                {{ row.completed_count }}/{{ row.lessons_count }} уроков
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">◷ {{ row.time_label }}</p>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="{{ progress_table.lessons|length|add:3 }}" class="p-10 text-center text-gray-500 dark:text-gray-400">
+              Данных по студентам пока нет.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex flex-wrap gap-5 mt-5 text-sm text-gray-600 dark:text-gray-400">
+    <span class="text-green-600 dark:text-green-400">✓ Завершен</span>
+    <span>⊗ Не начат</span>
+    <span class="text-amber-600 dark:text-amber-400">🏅 Результат теста</span>
+  </div>
+</div>
+
+<div class="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-700 p-6">
+  <a href="{% url 'lessons:teacher_course_list' %}?students={{ active_course.pk }}"
+     class="block w-full text-center px-5 py-3 border border-gray-300 dark:border-slate-600 rounded-xl font-semibold">
+    Закрыть
+  </a>
+</div>

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Календарь - Studium{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6">
+
+  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-3xl font-bold dark:text-white">Календарь дедлайнов</h1>
+      <p class="text-gray-600 dark:text-gray-300 mt-2">
+        Дедлайны уроков из курсов, на которые вы записаны.
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <a href="{% url 'lessons:student_calendar' %}?year={% firstof calendar_grid.prev_year %}&month={% firstof calendar_grid.prev_month %}"
+         class="w-10 h-10 inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700">
+        ‹
+      </a>
+
+      <a href="{% url 'lessons:student_calendar' %}"
+         class="px-4 py-2 rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 font-medium">
+        Сегодня
+      </a>
+
+      <a href="{% url 'lessons:student_calendar' %}?year={% firstof calendar_grid.next_year %}&month={% firstof calendar_grid.next_month %}"
+         class="w-10 h-10 inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700">
+        ›
+      </a>
+    </div>
+  </div>
+
+  <div class="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+      <h2 class="text-xl font-bold dark:text-white">
+        {% firstof calendar_grid.month_label %}
+      </h2>
+      <div class="text-sm text-gray-500 dark:text-gray-400">
+        Всего дедлайнов: {% firstof events|length 0 %}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-7 border-b border-gray-200 dark:border-slate-700 bg-gray-100 dark:bg-slate-800">
+      <div class="px-3 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Пн</div>
+      <div class="px-3 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Вт</div>
+      <div class="px-3 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Ср</div>
+      <div class="px-3 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Чт</div>
+      <div class="px-3 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Пт</div>
+      <div class="px-3 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Сб</div>
+      <div class="px-3 py-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase text-center">Вс</div>
+    </div>
+
+    <div class="grid grid-cols-7">
+      {% for week in calendar_grid.weeks %}
+        {% for day in week %}
+          <div class="min-h-32 border-r border-b border-gray-200 dark:border-slate-700 p-2 bg-white dark:bg-slate-900 {% if not day.in_current_month %}bg-gray-50 dark:bg-slate-950{% endif %}">
+            <div class="flex items-center justify-between mb-2">
+              <span class="inline-flex items-center justify-center w-7 h-7 text-sm font-medium {% if day.is_today %}rounded-full bg-blue-600 text-white{% elif day.in_current_month %}text-gray-900 dark:text-gray-100{% else %}text-gray-400 dark:text-gray-600{% endif %}">
+                {% firstof day.day %}
+              </span>
+            </div>
+
+            <div class="space-y-1">
+              {% for event in day.events %}
+                <a href="{% url 'lessons:lesson_detail' event.course.pk event.lesson.pk %}"
+                   class="block rounded-md px-2 py-1 bg-green-500 text-white text-xs font-medium truncate hover:bg-green-600"
+                   title="{% firstof event.course.name %}: {% firstof event.lesson.name %}">
+                  <span class="opacity-90">
+                    {% firstof event.deadline|date:"H:i" %}
+                  </span>
+                  ·
+                  {% firstof event.lesson.name %}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-6 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-5">
+    <label for="calendar-feed-url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      Личная ссылка на динамический календарь (.ics)
+    </label>
+
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input id="calendar-feed-url"
+             type="text"
+             readonly
+             value="{% firstof calendar_feed_url %}"
+             class="flex-1 px-4 py-2 rounded-lg border border-gray-300 bg-gray-50 text-gray-900 dark:border-slate-600 dark:bg-slate-700 dark:text-white">
+
+      <a href="{% firstof calendar_feed_url %}"
+         class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 transition-colors">
+        Открыть .ics
+      </a>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

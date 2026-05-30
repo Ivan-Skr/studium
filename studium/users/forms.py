@@ -56,7 +56,7 @@ class RegisterForm(UserCreationForm):
         role = self.cleaned_data.get("role", "student")
         user.is_student = role == "student"
         user.is_teacher = role == "teacher"
-        user.is_staff = role == "teacher"
+        user.is_staff = False
         if commit:
             user.save()
         return user

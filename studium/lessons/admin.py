@@ -189,7 +189,7 @@ class LessonAdmin(TeacherScopedAdminMixin, SortableAdminBase, admin.ModelAdmin):
     inlines = (BlockInline,)
     readonly_fields = ("order", "add_block_links")
     fieldsets = (
-        (None, {"fields": ("course", "name", "order")}),
+        (None, {"fields": ("course", "name", "deadline", "order")}),
         ("Быстрое добавление блоков", {"fields": ("add_block_links",)}),
     )
 

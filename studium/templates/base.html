@@ -74,6 +74,20 @@
                     {% endif %}
 
                     {% if user.is_authenticated %}
+                        {% if user.is_student %}
+                        <a href="{% url 'lessons:student_calendar' %}"
+                           class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors
+                           {% if request.resolver_match.url_name == 'student_calendar' %}
+                               bg-gray-100 text-gray-900 dark:bg-slate-700 dark:text-white
+                           {% else %}
+                               text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-slate-700 dark:hover:text-white
+                           {% endif %}">
+                            <svg class="w-4 h-4 {% if request.resolver_match.url_name == 'student_calendar' %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-400{% endif %}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25m10.5-2.25v2.25M3.75 8.25h16.5M5.25 5.25h13.5A1.5 1.5 0 0120.25 6.75v12A1.5 1.5 0 0118.75 20.25H5.25A1.5 1.5 0 013.75 18.75v-12A1.5 1.5 0 015.25 5.25z" />
+                            </svg>
+                            <span>Календарь</span>
+                        </a>
+                        {% endif %}
 
                         <!-- Вкладка: Профиль -->
                         <a href="{% url 'users:profile' %}"

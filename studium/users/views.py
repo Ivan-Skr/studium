@@ -54,7 +54,41 @@ def profile(request):
         context["authored_courses"] = Course.objects.filter(
             author=request.user
         ).order_by("-created_at")[:6]
+    else:
+        from lessons.models import CourseCompletion, CourseEnrollment
+
+        context["enrolled_courses"] = (
+            CourseEnrollment.objects.filter(
+                student=request.user,
+                status=CourseEnrollment.Status.APPROVED,
+            )
+            .select_related("course", "course__author")
+            .order_by("-updated_at")[:6]
+        )
+        context["enrolled_courses_count"] = CourseEnrollment.objects.filter(
+            student=request.user,
+            status=CourseEnrollment.Status.APPROVED,
+        ).count()
+        context["completed_course_ids"] = set(
+            CourseCompletion.objects.filter(student=request.user).values_list(
+                "course_id", flat=True
+            )
+        )
+        context["completed_courses_count"] = len(context["completed_course_ids"])
+        context["certificates_count"] = request.user.certificates.count()
     return render(request, "users/profile.html", context)
+
+
+@login_required
+def certificates(request):
+    user_certificates = request.user.certificates.select_related("course").order_by(
+        "-issued_at"
+    )
+    return render(
+        request,
+        "users/certificates.html",
+        {"certificates": user_certificates},
+    )
 
 
 @login_required
